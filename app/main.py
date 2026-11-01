@@ -98,10 +98,10 @@ class AppState:
         return {"Gaming": {"vol": 80, "mute": False}, "Music": {"vol": 40, "mute": False}}
 
 class MainApplication(ctk.CTk):
-    def __init__(self, state: AppState):
+    def __init__(self, state_object: AppState):
         super().__init__()
-        self.state = state
-        self.title("RED SQUARE - Quantum Control v1.4")
+        self.state_obj = state_object
+        self.title("RED SQUARE - Quantum Control v1.5")
         self.geometry("900x600")
         self.minsize(850, 550)
         ctk.set_appearance_mode("dark")
@@ -124,13 +124,13 @@ class MainApplication(ctk.CTk):
         self.btn_rgb = ctk.CTkButton(self.menu_frame, text="RGB Подсветка", fg_color="#222", hover_color="#333", command=self.show_rgb)
         self.btn_rgb.pack(pady=10, padx=20, fill="x")
         self.show_main()
-        self.state.subscribe(self.on_state_changed)
-        self.update_loop()
+        self.state_obj.subscribe(self.on_state_changed)
+        self.run_audio_updater()
     def create_main_screen(self):
         lbl = ctk.CTkLabel(self.screen_main, text="Управление звуком Windows", font=ctk.CTkFont(size=16, weight="bold"), text_color="#00F0FF")
         lbl.pack(pady=20)
         self.vol_slider = ctk.CTkSlider(self.screen_main, from_=0, to=100, button_color="#FF003C", progress_color="#FF003C", command=self.on_slider_move)
-        self.vol_slider.set(self.state.audio.get_volume())
+        self.vol_slider.set(self.state_obj.audio.get_volume())
         self.vol_slider.pack(pady=20, padx=50, fill="x")
         self.vol_label = ctk.CTkLabel(self.screen_main, text=f"Громкость: {int(self.vol_slider.get())}%", text_color="#FFF")
         self.vol_label.pack()
@@ -143,7 +143,7 @@ class MainApplication(ctk.CTk):
         lbl.pack(pady=20)
         info_lbl = ctk.CTkLabel(self.screen_rgb, text="[Подсветка и батарея: режим эмуляции]", text_color="#777")
         info_lbl.pack(pady=10)
-        btn_neon = ctk.CTkButton(self.screen_rgb, text="Включить Кибер-Волну", fg_color="#FF003C", command=lambda: self.state.update_rgb(1, "#FF003C", 100))
+        btn_neon = ctk.CTkButton(self.screen_rgb, text="Включить Кибер-Волну", fg_color="#FF003C", command=lambda: self.state_obj.update_rgb(1, "#FF003C", 100))
         btn_neon.pack(pady=10)
     def show_main(self):
         self.screen_rgb.grid_forget()
@@ -156,30 +156,30 @@ class MainApplication(ctk.CTk):
         self.btn_main.configure(fg_color="#222")
         self.btn_rgb.configure(fg_color="#FF003C")
     def on_slider_move(self, value):
-        self.state.audio.set_volume(int(value))
+        self.state_obj.audio.set_volume(int(value))
         self.vol_label.configure(text=f"Громкость: {int(value)}%")
     def toggle_mute(self):
-        current_state = self.state.audio.get_mic_mute()
-        self.state.audio.set_mic_mute(not current_state)
+        current_state = self.state_obj.audio.get_mic_mute()
+        self.state_obj.audio.set_mic_mute(not current_state)
         self.on_state_changed()
     def on_state_changed(self):
-        is_muted = self.state.audio.get_mic_mute()
+        is_muted = self.state_obj.audio.get_mic_mute()
         if is_muted:
             self.mic_status.configure(text="Микрофон ОТКЛЮЧЕН (MUTE)", text_color="#FF003C")
             self.btn_mute.configure(fg_color="#FF003C")
         else:
             self.mic_status.configure(text="Микрофон: Работает", text_color="#00FF66")
             self.btn_mute.configure(fg_color="#222")
-    def update_loop(self):
+    def run_audio_updater(self):
         try:
-            current_vol = self.state.audio.get_volume()
+            current_vol = self.state_obj.audio.get_volume()
             self.vol_slider.set(current_vol)
             self.vol_label.configure(text=f"Громкость: {current_vol}%")
         except:
             pass
-        self.after(500, self.update_loop)
+        self.after(500, self.run_audio_updater)
 
 if __name__ == "__main__":
-    app_state = AppState()
-    application = MainApplication(app_state)
+    global_state = AppState()
+    application = MainApplication(global_state)
     application.mainloop()
