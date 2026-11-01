@@ -78,7 +78,10 @@ class AppState:
         self.listeners.append(callback)
     def notify(self):
         for callback in self.listeners:
-            callback()
+            try:
+                callback()
+            except Exception as e:
+                print(f"Listener error: {e}")
     def update_rgb(self, mode, color, brightness):
         self.current_rgb_mode = mode
         self.current_rgb_color = color
@@ -98,7 +101,7 @@ class MainApplication(ctk.CTk):
     def __init__(self, state: AppState):
         super().__init__()
         self.state = state
-        self.title("RED SQUARE - Quantum Control v1.3")
+        self.title("RED SQUARE - Quantum Control v1.4")
         self.geometry("900x600")
         self.minsize(850, 550)
         ctk.set_appearance_mode("dark")
